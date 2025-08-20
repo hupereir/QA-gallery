@@ -19,16 +19,30 @@ echo '-------------------------'
 echo "Processing $nbname"
 echo '-------------------------'
 
+echo jupyter nbconvert --to notebook --inplace --execute --ExecutePreprocessor.kernel_name=python $nbname
 jupyter nbconvert --to notebook --inplace --execute --ExecutePreprocessor.kernel_name=python $nbname
 
 build_ret=$? 
 if [ $build_ret -ne 0 ]; then
+
 	echo "======================================================="
-	echo "${nbname}: Failed build with return = ${build_ret}. ";
+	echo "${nbname}: Failed build with return = ${build_ret}. Try again....";
 	echo "======================================================="
-	exit $build_ret;
+	
+	timeout --preserve-status --signal=9 5m jupyter nbconvert --to notebook --inplace --execute --ExecutePreprocessor.kernel_name=python $nbname
+	
+	build_ret=$? 
+	if [ $build_ret -ne 0 ]; then
+	
+		echo "======================================================="
+		echo "${nbname}: Second failed build with return = ${build_ret}. return fail...";
+		echo "======================================================="
+
+		exit $build_ret;
+	fi
 fi
 
-jupyter nbconvert --to html $nbname
+touch dummy.html
+# jupyter nbconvert --to html $nbname
 
 
